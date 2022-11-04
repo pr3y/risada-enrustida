@@ -1,2 +1,5 @@
 # risada-enrustida
-encoding custom
+encoding
+
+## Compiling
+`cargo build --release`
