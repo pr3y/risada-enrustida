@@ -1,0 +1,2 @@
+# risada-enrustida
+encoding custom
