@@ -1,22 +1,28 @@
-
-//TODO: migrar lib argparse para clap, comentar codigo, otimizar logica
-
-extern crate argparse;
-
+//TODO: comentar codigo, otimizar logica
+use clap::Parser;
 use std::cmp;
 
-static RISADA: &[char] = &['A','E','H','I','U'];
+static RISADA: &[char] = &['A', 'E', 'H', 'I', 'U'];
 
-use argparse::{ArgumentParser, Store};
+#[derive(Parser, Debug)]
+#[command(version = "0.1.0", about = "Decodificador de risada", long_about = None)]
+struct Args {
+    /// Name of the person to greet
+    #[arg(short, long)]
+    decode: Option<String>,
 
-fn valida_risada(risada_encodada: &str)-> String{
+    /// Number of times to greet
+    #[arg(short, long)]
+    encode: Option<String>,
+}
 
+fn valida_risada(risada_encodada: &str) -> String {
     let mut mensagem_final = String::new();
-    
+
     if risada_encodada.len() % 3 == 0 {
         //println!("TAMANHO DE RISADA VALIDO");
-      for letra in risada_encodada.chars(){
-            if RISADA.contains(&letra){
+        for letra in risada_encodada.chars() {
+            if RISADA.contains(&letra) {
                 //println!("CARACTERE VALIDO");
 
                 for (pos, e) in RISADA.iter().enumerate() {
@@ -24,20 +30,18 @@ fn valida_risada(risada_encodada: &str)-> String{
                         mensagem_final.push_str(&format!("{}", pos));
                     }
                 }
-            }else{
-                panic!("Caracter '{}' invalido encontado na RISADA!!",&letra)
+            } else {
+                panic!("Caracter '{}' invalido encontado na RISADA!!", &letra)
             }
+        }
+
+        return mensagem_final;
+    } else {
+        panic!("RISADA INVALIDA!!");
     }
-
-    return mensagem_final;
-
-   }else{
-       panic!("RISADA INVALIDA!!");
-   }
 }
 
-fn encoda_risada(risada_decodada: &str){
-
+fn encoda_risada(risada_decodada: &str) {
     let mut binary = String::new();
 
     for ch in risada_decodada.chars() {
@@ -55,7 +59,7 @@ fn encoda_risada(risada_decodada: &str){
 
     for n in binario_separado {
         array_base5.push_str(&para_base5(n));
-        }
+    }
 
     let mut output = String::new();
 
@@ -66,15 +70,12 @@ fn encoda_risada(risada_decodada: &str){
     println!("{}", output);
 }
 
-
-fn decoda_risada(mut risada_encodada: &str){
- 
+fn decoda_risada(mut risada_encodada: &str) {
     let mut v = vec![];
 
     let mut string_final = String::new();
 
     while !risada_encodada.is_empty() {
-
         //corta string da risada em 3
         let (chunk, rest) = risada_encodada.split_at(cmp::min(3, risada_encodada.len()));
         v.push(chunk);
@@ -84,31 +85,25 @@ fn decoda_risada(mut risada_encodada: &str){
 
         let _string = String::new();
 
-        for letras in &v{
+        for letras in &v {
             let binario = para_binario(letras);
 
             vetor_binario.push(binario);
-            }
+        }
 
-
-        for i in vetor_binario 
-        {
-
+        for i in vetor_binario {
             let y = isize::from_str_radix(&i, 2).unwrap();
 
             let ascii = y as u8;
             let character = ascii as char;
 
             if risada_encodada.is_empty() {
-            string_final.push(character);
+                string_final.push(character);
             }
         }
-
-        }
-    println!("{}",string_final);
-
     }
-
+    println!("{}", string_final);
+}
 
 fn para_binario(s: &str) -> String {
     let mut n = 0;
@@ -133,7 +128,6 @@ fn para_binario(s: &str) -> String {
     resultado.chars().rev().collect()
 }
 
-
 fn para_base5(s: &str) -> String {
     let mut n = 0;
     let mut resultado = String::new();
@@ -154,34 +148,17 @@ fn para_base5(s: &str) -> String {
     resultado.chars().rev().collect()
 }
 
-
 fn main() {
+    let args = Args::parse();
 
-    let mut decoded = String::new();
-    let mut encoded = String::new();
-
-    {  
-        let mut ap = ArgumentParser::new();
-        ap.stop_on_first_argument(true);
-        ap.set_description("Decodificador de RISADAs.");
-        ap.refer(&mut decoded)
-            .add_option(&["-d","--decode"], Store,
-            "Usa opcao de decodar");
-        ap.refer(&mut encoded)
-            .add_option(&["-e","--encode"], Store,
-            "Usa opcao de encodar");
-        ap.parse_args_or_exit();
+    if let Some(ref decode_value) = args.decode {
+        println!("Decodificando: {}", decode_value);
+        let risada_base5 = valida_risada(&decode_value);
+        decoda_risada(&risada_base5);
     }
 
-    if decoded.is_empty() {
-        encoda_risada(&encoded);
-
-    }else{
-
-    let risada_base5 = valida_risada(&decoded);
-
-    decoda_risada(&risada_base5);
-
+    if let Some(ref encode_value) = args.encode {
+        println!("Codificando: {}", encode_value);
+        encoda_risada(&encode_value)
     }
-
 }
